@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Implementation-Title: discrepancy-create
+Implementation-Version: __GITVERSION_FULLSEMVER__
+Build-Jdk-Spec: 1.8
+Created-By: Maven Integration for Eclipse
+

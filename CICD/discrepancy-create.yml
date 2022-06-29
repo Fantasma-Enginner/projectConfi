@@ -1,0 +1,131 @@
+# Node.js with Angular
+# Build a Node.js project that uses Angular.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+  branches:
+    include:
+      - main
+      - us/*
+  paths:
+    exclude:
+      - CICD
+    include:
+      - frontend
+      - backend
+      - database
+
+stages:
+- stage: BuildDiscrepancyCreate
+  displayName: Build stage FrontEnd BackEnd
+  jobs:
+  - job: BuildJob
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    - task: gitversion/setup@0
+      displayName: "Install GitVersion"
+      inputs:
+       versionSpec: "5.x"
+
+    - task: gitversion/execute@0
+      inputs:
+       useConfigFile: true
+       configFilePath: "CICD/VersionConfig.yml"
+
+    - task: colinsalmcorner.colinsalmcorner-buildtasks.replace-tokens-task.ReplaceTokens@1
+      displayName: "Replace SemVer Maven"
+      inputs:
+        sourcePath: "backend/manager"
+        filePattern: "pom.xml"
+        tokenRegex: '__(\w+)__'
+
+    - task: Bash@3
+      displayName: "Replace SemVer NPM"
+      inputs:
+        targetType: "inline"
+        script: 'sed -i "s/0.0.0/$GITVERSION_FULLSEMVER/g" package.json'
+        workingDirectory: "frontend/creatediscrepancy-app"
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '12.x'
+      displayName: 'Install Node.js'
+
+    - task: Npm@1
+      displayName: 'Install creatediscrepancy-app'
+      inputs:
+        command: 'install'
+        workingDir: 'frontend/creatediscrepancy-app'
+        customRegistry: 'useFeed'
+        customFeed: 'c65ae223-98b1-47e3-be2b-a6045b6487ab'
+    
+    - task: Npm@1
+      displayName: 'npm Build'
+      inputs:
+        command: 'custom'
+        workingDir: 'frontend/creatediscrepancy-app'
+        customCommand: 'run build:single-spa'
+        customRegistry: 'useFeed'
+        customFeed: 'c65ae223-98b1-47e3-be2b-a6045b6487ab'
+    
+    - task: Maven@3
+      inputs:
+        mavenPomFile: 'backend/manager/pom.xml'
+        options: '-DskipITs -X -Pprod'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        javaHomeOption: 'JDKVersion'
+        mavenVersionOption: 'Default'
+        mavenAuthenticateFeed: true
+        effectivePomSkip: false
+        sonarQubeRunAnalysis: false
+    
+    - task: CopyFiles@2
+      displayName: 'Copy Service Files'
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)/application'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/dist/application'
+        OverWrite: false
+        
+    - task: CopyFiles@2
+      displayName: 'Copy Scripts'
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)/database'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/dist/application/database'
+        OverWrite: false        
+        
+    - task: CopyFiles@2
+      displayName: 'Copy Documents'
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)/docs'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/dist/docs'
+        OverWrite: false            
+
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/dist'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.Repository.Name)-$(Build.BuildNumber).zip'
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.Repository.Name)-$(Build.BuildNumber).zip'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+      enabled: true
+
+#- stage: BuildBackEnd
+#  displayName: Build stage BackEnd
+##  jobs:
+#  - job: BuildJob
+#    pool:
+#      vmImage: 'ubuntu-latest'
+#    steps:

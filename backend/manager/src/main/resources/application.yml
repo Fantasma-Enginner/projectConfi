@@ -1,0 +1,21 @@
+# ALL PROFILES CONFIG
+server:
+  port: 0
+  
+spring:
+  application:
+    #name: discrepancy-create
+    name: @project.name@
+  config:
+    import:
+    - configserver:http://localhost:8762
+  profiles: 
+    active: @activeProfile@
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+        - info
+        - health

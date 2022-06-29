@@ -1,0 +1,11 @@
+<service>
+  <id>VPS-discrepancy-create</id>
+  <name>VPS-discrepancy-create</name>
+  <description>This service runs manage operations for the modules Create discrepancy.</description>
+  <env name="discrepancy-create" value="%BASE%"/>
+  <executable>java</executable>
+  <arguments>-Xrs -Xmx256m -jar "%BASE%\discrepancy-create.jar"</arguments>
+  <log mode="roll-by-size"></log>
+  <logpath>logs</logpath>
+  <onfailure action="restart" delay="10 sec" />
+</service>

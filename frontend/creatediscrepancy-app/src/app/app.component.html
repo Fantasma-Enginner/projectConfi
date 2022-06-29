@@ -1,0 +1,250 @@
+<vp-version [moduleApp]=moduleVP></vp-version>
+<div class="container py-1">
+  <div class="card">
+    <div class="row">
+      <span class="titulo"> {{ titulo | uppercase }} </span>
+      <hr />
+    </div>
+    <div>
+      <app-filters (mapOut)="addItem($event)" (directionsOut)="addDirection($event)"></app-filters>
+      <br />
+    </div>
+    <div class="table-responsive ">
+      <table  class="table text-center table-striped table-hover">
+        <thead >
+          <tr>
+            <th scope="col">Fecha de transacción</th>
+            <th scope="col">Categoría consola</th>
+            <th scope="col">Categoría DAC</th>
+            <th scope="col">Sentido</th>
+            <th scope="col">Forma Pago</th>
+            <th scope="col">Valor transacción</th>
+            <th scope="col">Recolector</th>
+            <th class="text-center">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <div class="container" style="margin-left: 220%;">
+            <button   *ngIf="load" class="btn btn-dark  mt-2 " type="button" disabled  >
+              <span  class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Cargando...
+            </button>
+          </div>
+          <tr *ngFor="let discrepancyDTO of discrepancyDTOS">
+            <td>{{discrepancyDTO.dateTransaction | date: 'yyyy-MM-dd HH:mm:ss.SSS'}}</td>
+            <th scope="row" >{{discrepancyDTO.consoleCategory === null ? '0' : discrepancyDTO.consoleCategory }}</th>
+            <th scope="row" >{{discrepancyDTO.dacCategory === null ? '0': discrepancyDTO.dacCategory }}</th>
+            <td>{{discrepancyDTO.sentConc === 'A'  ? 'PRINCIPAL': discrepancyDTO.sentConc || discrepancyDTO.sentConc === 'B'  ? 'RETORNO': discrepancyDTO.sentConc  }}</td>
+            <td>{{discrepancyDTO.idFormPagoname}}</td>
+            <td>{{discrepancyDTO.reconcileValue | currency:'USD'}}</td>
+            <td>{{discrepancyDTO.usercodename}}</td>
+            <td class="text-center ">
+              <button class="btn btn-primary mx-3" type="button"
+                (click)="open(mymodal,discrepancyDTO)" style="color:aliceblue;">Crear<i class="fas fa-plus-circle ms-2" style="color: #2c7456;"></i></button>
+            </td>
+          </tr>
+        </tbody>
+        <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+          <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+          </symbol>
+          <symbol id="info-fill" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+          </symbol>
+          <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+          </symbol>
+        </svg>
+
+        <tfoot class="table-row-group">
+          <tr *ngIf="discrepancyDTOS == null ">
+            <th colspan="8">
+              <div class="alert alert-info" role="alert"> <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Info:"><use xlink:href="#info-fill"/></svg>
+                ¡Por favor filtre en el buscador! Estación, Carril, Fecha, Turno O Estación Carril, Categoria, Tiquete.
+              </div>
+            </th>
+          </tr>
+          <tr *ngIf=" discrepancyDTOS !== undefined && discrepancyDTOS.length == 0 ">
+            <th colspan="8">
+
+              <div class="alert alert-warning" role="alert"><svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+                No se obtuvieron registros para la búsqueda
+              </div>
+            </th>
+          </tr>
+        </tfoot>
+      </table>
+      <app-pagination [allPagesNumber]="allPages" [itemsOptions]="pageSizes"
+      (changePage)="handlePageChange($event)" (changeItems)="handlePageSizeChange($event)">
+      </app-pagination>
+    </div>
+  </div>
+  <!--AA
+  <button class="btn btn-lg btn-outline-primary" (click)="open(mymodal)">Open My Modal</button>-->
+
+  <ng-template #mymodal let-modal>
+    <div class="modal-header">
+      <h3>Información crear discrepancias.</h3>
+      <button  type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body" style="padding: 15px;padding-top: 0px;">
+      <div class="row" style="border: 1px solid; border-color: darkgray">
+        <div class="col-5">
+          <div class="row" style="background-color: darkgray;">
+            <h6 style="margin-left: 40%;">Conciliar</h6>
+          </div>
+          <div class="row" style="border: 1px solid; border-color: darkgray">
+            <div class="col-5 mt-4">
+              <div class="row">
+                <label class="col-form-label">Fecha y Hora:</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label">Estación:</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label">Carril:</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label">Turno:</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label">Sentido:</label>
+              </div>
+              <div *ngIf="!shadow_toll" class="row">
+                <label class="col-form-label">Categoría Consola:</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label">Categoría DAC:</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label">Placa:</label>
+              </div>
+              <div *ngIf="!shadow_toll"class="row">
+                <label class="col-form-label">Forma de pago:</label>
+              </div>
+              <div *ngIf="!shadow_toll" class="row">
+                <label class="col-form-label">Valor:</label>
+              </div>
+              <div *ngIf="!shadow_toll" class="row">
+                <label class="col-form-label">Nombre Recolector(a):</label>
+              </div>
+              <div *ngIf="!shadow_toll"class="row">
+                <label class="col-form-label">Novedad:</label>
+              </div>
+
+
+
+            </div>
+            <div class="col-7 mt-4">
+              <div class="row">
+                <label class="col-form-label" *ngIf="reconcile.dateTransaction == null">--</label>
+                <label class="col-form-label" *ngIf="reconcile.dateTransaction != null">{{reconcile.dateTransaction}}</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label" *ngIf="toll == null">--</label>
+                <label class="col-form-label" *ngIf="toll != null">{{toll}}</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label" *ngIf="reconcile.laneId == null">--</label>
+                <label class="col-form-label" *ngIf="reconcile.laneId != null">{{reconcile.laneId}}</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label" *ngIf="reconcile.turnCode == null">--</label>
+                <label class="col-form-label" *ngIf="reconcile.turnCode != null">{{reconcile.turnCode}}</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label" *ngIf="reconcile.sentConc == null">--</label>
+                <label class="col-form-label" *ngIf="reconcile.sentConc == 'A'">{{directions[0].label}}</label>
+                <label class="col-form-label" *ngIf="reconcile.sentConc !== 'A'">{{directions[1].label}}</label>
+              </div>
+              <div *ngIf="!shadow_toll" class="row">
+                <label class="col-form-label" *ngIf="reconcile.consoleCategory == null">--</label>
+                <label class="col-form-label" *ngIf="reconcile.consoleCategory != null">{{reconcile.consoleCategory}}</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label" *ngIf="reconcile.dacCategory == null">--</label>
+                <label class="col-form-label" *ngIf="reconcile.dacCategory != null">{{reconcile.dacCategory}}</label>
+              </div>
+              <div class="row">
+                <label class="col-form-label" *ngIf="reconcile.numPlaca == null">--</label>
+                <label class="col-form-label" *ngIf="reconcile.numPlaca != null">{{reconcile.numPlaca}}</label>
+              </div>
+              <div *ngIf="!shadow_toll" class="row">
+                <label class="col-form-label" *ngIf="reconcile.idFormPago == null">--</label>
+                <label class="col-form-label" *ngIf="reconcile.idFormPago != null">{{nameFormaPago}}</label>
+              </div>
+              <div *ngIf="!shadow_toll" class="row">
+                <label class="col-form-label" *ngIf="reconcile.valueCollection == null">--</label>
+                <label class="col-form-label" *ngIf="reconcile.valueCollection != null">{{reconcile.valueCollection| currency: 'USD'}}</label>
+              </div>
+              <div *ngIf="!shadow_toll" class="row">
+                <label class="col-form-label" *ngIf="user == null">--</label>
+                <label class="col-form-label" *ngIf="user != null" style="font-size: 15px;">{{user}}</label>
+              </div>
+              <div *ngIf="!shadow_toll" class="row">
+                <label class="col-form-label" *ngIf="reconcile.noveltyName != null && reconcile.noveltyName != ''">{{reconcile.noveltyName}}</label>
+                <label class="col-form-label" *ngIf="reconcile.noveltyName == null || reconcile.noveltyName == '' ">N/A</label>
+              </div>
+
+
+          </div>
+
+          <div class="row mb-1 mt-4 pb-3" >
+            <h6 class="text-center">Esta será la categoría que se asignará para crear la discrepancia</h6>
+            <label  class="col-sm-5 col-form-label">Categoria consola:</label>
+          <select
+            type="number"
+            class="form-select"
+            style="max-width: 16rem; "
+            (change)=seleccategory($event.target.value)
+          >
+            <option selected value="">Seleccione categoria consola</option>
+            <option *ngFor="let categori of categorias" [value]="categori.classification">{{categori.name}}</option>
+          </select>
+        </div>
+        <div class="modal-footer mt-3 pb-3">
+          <button  type="button" class="btn btn-outline-dark ms-5" (click)="(modal.close())">Cancelar</button>
+          <button type="button" class="btn btn-primary text-center" (click)="updateCategori()"(click)="modal.close('Save click')">Crear discrepancia</button>
+        </div>
+      </div>
+
+        </div>
+        <div class="col-7">
+          <div style="margin-left: 15;" class="row" style="background-color: darkgray;">
+            <h6 style="margin-left: 41.5%;" >Fotografías</h6>
+          </div>
+          <div *ngIf="images != null && images.length > 0" style="border: 1px solid; border-color: darkgray">
+            <div class="row" style="margin: 20px;">
+              <ngb-carousel  >
+                <ng-template *ngFor="let image of images; let itemIMG = index " ngbSlide >
+                  <h6 style="margin-left: 44%;" >Foto ejes</h6>
+                  <div class="picsum-img-wrapper" class="img-zoom-container" (mouseenter)="imageZoom('myimage'+itemIMG, 'myresult'+itemIMG);">
+                    <img id="{{'myimage'+itemIMG}}" [src]="'data:image/jpeg;base64,'+image.images" style="width: 35rem; height: 20rem;  ">
+                    <button style="margin-left: 40%;" type="button" class="btn btn-link"(click)="mostrarOcultarZoom()">{{mostrarZoom}}</button>
+                    <div *ngIf="mostrar" id="{{'myresult'+itemIMG}}" class="img-zoom-result" style="width: 35rem; height: 20rem " ></div>
+                  </div>
+              </ng-template >
+              </ngb-carousel>
+              <ngb-carousel  style="width: 25rem; margin-left: 15%;  ">
+                <ng-template *ngFor="let image of imagesPlate; let itemIMG = index "  ngbSlide>
+                  <h6 style="margin-left: 44%;" >Foto placa</h6>
+                  <div class="picsum-img-wrapper" class="img-zoom-container" (mouseenter)="imageZoom('myimage1'+itemIMG, 'myresult1'+itemIMG);">
+                    <img id="{{'myimage1'+itemIMG}}" [src]="'data:image/jpeg;base64,'+image.images" style="width: 25rem; height: 15rem;  " >
+                    <button style="margin-left: 38%;" type="button" class="btn btn-link"(click)="mostrarOcultarZoom1()">{{mostrarZoom1}}</button>
+                    <div *ngIf="mostrar1" id="{{'myresult1'+itemIMG}}" class="img-zoom-result" style="width: 20rem; height: 13rem; margin-left: 7%;  " ></div>
+                  </div>
+              </ng-template >
+              </ngb-carousel>
+          </div>
+        </div>
+          <div *ngIf="images == null || images.length == 0" class="col-12">
+            <div class="alert alert-warning" role="alert">
+              No se obtuvieron imagenes para la discrepancia
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</div>

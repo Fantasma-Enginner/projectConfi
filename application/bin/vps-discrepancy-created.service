@@ -1,0 +1,12 @@
+[Unit]
+Description=Vial+ Create Discrepnacy module.
+After=syslog.target
+
+[Service]
+Type=simple
+ExecStart=/opt/vps/discrepancy-create/bin/discrepancy-create.jar
+Restart=always
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target

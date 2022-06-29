@@ -1,0 +1,24 @@
+/* You can add global styles to this file, and also import other style files */
+* {
+  box-sizing: border-box;
+}
+
+.img-zoom-container {
+  position: relative;
+}
+
+.img-zoom-lens {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-radius: 100px;
+  /*set the size of the lens:*/
+  width: 150px;
+  height: 150px;
+}
+
+.img-zoom-result {
+  border: 1px #d4d4d4;
+  /*set the size of the result div:*/
+  width: 200px;
+  height: 200px;
+}

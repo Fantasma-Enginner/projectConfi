@@ -1,0 +1,53 @@
+# Node.js with Angular
+# Build a Node.js project that uses Angular.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+  branches:
+    include:
+      - main
+      - us/*
+  paths:
+    exclude:
+      - CICD
+    include:
+      - client
+
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '12.x'
+  displayName: 'Install Node.js'
+- task: Npm@1
+  displayName: 'Install modules creatediscrepancy-api'
+  inputs:
+    command: 'install'
+    workingDir: 'client/creatediscrepancy-api'
+    customRegistry: 'useFeed'
+    customFeed: '193aea28-bf59-44f7-8801-5586babc21c0'
+- task: Npm@1
+  displayName: 'npm install @types/node@15.6.1 --save-dev'
+  inputs:
+    command: 'custom'
+    workingDir: 'client/creatediscrepancy-api'
+    customCommand: 'install @types/node@15.6.1 --save-dev'
+    customRegistry: 'useFeed'
+    customFeed: '193aea28-bf59-44f7-8801-5586babc21c0'
+- task: Npm@1
+  displayName: 'npm Build'
+  inputs:
+    command: 'custom'
+    workingDir: 'client/creatediscrepancy-api'
+    customCommand: 'run build -o $(Build.ArtifactStagingDirectory)/creatediscrepancy-api/dist'
+    customRegistry: 'useFeed'
+    customFeed: '193aea28-bf59-44f7-8801-5586babc21c0'
+- task: Npm@1
+  displayName: 'npm Publish Artifact'
+  inputs:
+    command: 'publish'
+    workingDir: 'client/creatediscrepancy-api'
+    publishRegistry: 'useFeed'
+    publishFeed: '3eb5fbf7-3b41-4b9a-8e08-a0f2884109d3/7e81ac95-7388-4592-aab4-167d25930c53'
+
